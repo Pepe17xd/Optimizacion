@@ -52,6 +52,58 @@ export function validateRoute(route, dimension) {
   return true;
 }
 
+export function validateSymmetricDistances(distances) {
+  const n = distances.length;
+  if (n < 3 || distances.some((row) => !Array.isArray(row) || row.length !== n)) {
+    throw new Error("La matriz de distancias debe ser cuadrada y contener al menos tres ciudades.");
+  }
+  for (let i = 0; i < n; i += 1) {
+    if (distances[i][i] !== 0) throw new Error("La diagonal de distancias debe ser cero.");
+    for (let j = i + 1; j < n; j += 1) {
+      if (!Number.isFinite(distances[i][j]) || distances[i][j] < 0 || distances[i][j] !== distances[j][i]) {
+        throw new Error("2-opt con evaluación incremental requiere una matriz simétrica y no negativa.");
+      }
+    }
+  }
+  return true;
+}
+
+export function findBestTwoOptMove(inputRoute, distances) {
+  const route = [...inputRoute];
+  validateRoute(route, distances.length);
+  validateSymmetricDistances(distances);
+  let bestDelta = 0;
+  let bestIndices = null;
+  const beforeCost = routeCost(route, distances);
+  for (let i = 0; i < route.length; i += 1) {
+    const a = route[i], b = route[(i + 1) % route.length];
+    for (let j = i + 2; j < route.length; j += 1) {
+      if (i === 0 && j === route.length - 1) continue;
+      const c = route[j], d = route[(j + 1) % route.length];
+      const delta = distances[a][c] + distances[b][d] - distances[a][b] - distances[c][d];
+      if (delta < bestDelta) {
+        bestDelta = delta;
+        bestIndices = { i, j, a, b, c, d };
+      }
+    }
+  }
+  if (!bestIndices) return null;
+  const { i, j, a, b, c, d } = bestIndices;
+  const candidateRoute = [...route];
+  const segment = candidateRoute.slice(i + 1, j + 1).reverse();
+  candidateRoute.splice(i + 1, segment.length, ...segment);
+  const afterCost = routeCost(candidateRoute, distances);
+  if (afterCost - beforeCost !== bestDelta || afterCost >= beforeCost) {
+    throw new Error("La diferencia incremental 2-opt no coincide con el costo de la ruta.");
+  }
+  const bestMove = {
+    i, j, delta: bestDelta, beforeCost, afterCost, route: candidateRoute,
+    reversedSegment: route.slice(i + 1, j + 1),
+    removed: [[a, b], [c, d]], added: [[a, c], [b, d]],
+  };
+  return bestMove;
+}
+
 export function nearestNeighbor(distances, start = 0) {
   const n = distances.length;
   if (!Number.isInteger(start) || start < 0 || start >= n) throw new Error("Ciudad de origen no válida.");
@@ -76,6 +128,7 @@ export function nearestNeighbor(distances, start = 0) {
 export function improveTwoOpt(inputRoute, distances) {
   const route = [...inputRoute];
   validateRoute(route, distances.length);
+  validateSymmetricDistances(distances);
   const history = [routeCost(route, distances)];
   const started = performance.now();
   let moves = 0;
@@ -83,26 +136,12 @@ export function improveTwoOpt(inputRoute, distances) {
   let changed = true;
   while (changed) {
     changed = false;
-    let bestDelta = -1e-9;
-    let bestI = -1;
-    let bestJ = -1;
-    for (let i = 0; i < route.length; i += 1) {
-      const a = route[i], b = route[(i + 1) % route.length];
-      for (let j = i + 2; j < route.length; j += 1) {
-        if (i === 0 && j === route.length - 1) continue;
-        const c = route[j], d = route[(j + 1) % route.length];
-        const delta = distances[a][c] + distances[b][d] - distances[a][b] - distances[c][d];
-        if (delta < bestDelta) { bestDelta = delta; bestI = i; bestJ = j; }
-      }
-    }
-    if (bestI >= 0) {
-      const a = route[bestI], b = route[(bestI + 1) % route.length];
-      const c = route[bestJ], d = route[(bestJ + 1) % route.length];
-      lastMove = { removed: [[a,b],[c,d]], added: [[a,c],[b,d]] };
-      const segment = route.slice(bestI + 1, bestJ + 1).reverse();
-      route.splice(bestI + 1, segment.length, ...segment);
+    const move = findBestTwoOptMove(route, distances);
+    if (move) {
+      lastMove = move;
+      route.splice(0, route.length, ...move.route);
       const cost = routeCost(route, distances);
-      if (cost >= history.at(-1)) throw new Error("La mejora 2-opt no redujo el costo esperado.");
+      if (cost !== move.afterCost || cost >= history.at(-1)) throw new Error("La mejora 2-opt no redujo el costo esperado.");
       history.push(cost);
       moves += 1;
       changed = true;

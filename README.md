@@ -19,7 +19,7 @@ La presentación respeta `prefers-reduced-motion`. El panel del índice administ
 
 ## Demo reproducible
 
-En la diapositiva **Demo** se cargan las coordenadas oficiales de `results/berlin52.tsp` y `results/eil51.tsp`. La demo permite cambiar la instancia y el origen, reiniciar una ruta determinista, ejecutar vecino más cercano y 2-opt, cargar otro `.tsp` `EUC_2D`, ver el historial del costo y consultar duración, reducción porcentual y gap cuando existe un óptimo conocido.
+En la diapositiva **Demo**, los controles permiten reiniciar la misma ruta, calcular vecino mas cercano, ejecutar/pausar/continuar, avanzar o retroceder movimientos 2-opt y ajustar la pausa visual. La duracion mostrada mide solo computo, no animacion. El mapa, el gap y la grafica se actualizan al aceptar cada intercambio. Tambien se puede cargar un archivo `.tsp` EUC_2D.
 
 El motor está separado en `tsp-engine.js` y aplica la distancia TSPLIB `nint(sqrt(dx² + dy²))` por arista. Valida dimensión, IDs, coordenadas y la ruta como permutación completa; el cierre del tour se incluye al sumar la última arista al origen. 2-opt evalúa movimientos con el cambio de cuatro aristas y acepta el mejor movimiento de cada pasada.
 
@@ -30,13 +30,13 @@ SHA-256 de los archivos extraídos:
 - `berlin52.tsp`: `8496A5838133E3C3EB25A9FA8893B1AC302593FC8DC325350643A0CABD8ABADC`
 - `eil51.tsp`: `66C05AD077FFD64D5778E358BBD16BE049F8C8AE880CBD24F034487331D1CCCE`
 
-Una comprobación determinista del motor con origen TSPLIB ID 1 produjo 8 980 → 7 842 (berlin52, 11 movimientos 2-opt) y 511 → 435 (eil51, 9 movimientos). Son resultados de una corrida didáctica ejecutada por esta implementación; no son una comparación estadística ni mediciones de tiempo publicables. El 8 980 aportado para berlin52 coincide con este recorrido de vecino más cercano; el 7 967 aportado no coincide con el resultado de 2-opt reproducido aquí y sigue pendiente de explicación.
+Una corrida determinista desde ciudad TSPLIB ID 1 produjo berlin52: 8 980 ? 7 842 (11 movimientos 2-opt) y eil51: 511 ? 435 (9 movimientos). Sus gaps finales son 3,98 % y 2,11 % respecto de los ?ptimos publicados; son resultados did?cticos de una corrida por instancia, no una comparaci?n estad?stica ni un benchmark de tiempos. El 7 967 queda como resultado aportado anteriormente y no reproducido.
 
 ## Figuras y resultados experimentales
 
 El repositorio original no contiene los cuatro PNG indicados por versiones anteriores (`explosion_combinatoria.png`, `ruta_berlin52_nearest_neighbor+2opt.png`, `gap_por_algoritmo.png`, `calibracion_hormigas_beta.png`) ni los datos tabulares/código que los originaron. Sus espacios en diapositivas se marcan como conceptuales o pendientes, sin inventar escalas.
 
-Los valores berlin52 = 8 980 (vecino más cercano) y 7 967 (tras 2-opt), y cualquier comparación previa entre metaheurísticas, fueron aportados al proyecto. **Pendientes de verificación independiente:** faltan semilla, ciudad inicial, código, mediciones y artefactos de origen. No describen la demo que corre en el navegador.
+El valor 7 967 y las comparaciones previas entre metaheur?sticas fueron aportados al proyecto y no se reproducen en esta demo; faltan semilla, ruta, configuraci?n, mediciones y archivos de origen.
 
 ## Referencias académicas verificadas
 
@@ -51,7 +51,13 @@ Los valores berlin52 = 8 980 (vecino más cercano) y 7 967 (tras 2-opt), y cualq
 
 - El proyecto conserva HTML/CSS/JS estáticos, no usa librerías externas para el cálculo y las rutas a recursos son relativas.
 - La descarga de datos oficiales y verificación de metadatos bibliográficos se hizo durante la actualización. Las métricas de la demo se calcularon en cliente; los tiempos no son comparaciones entre equipos.
-- La presentación no ejecuta Held–Karp, fuerza bruta, recocido simulado, algoritmo genético ni ACO. Sus esquemas no son una simulación de esos algoritmos.
-- Verificación local: sintaxis de ambos módulos JavaScript; pruebas del motor/parser descritas arriba; demo y navegación probadas en Chrome a 1536 × 770; las 18 diapositivas recorridas sin desbordamiento horizontal y sin errores de consola. Los fallbacks de las cuatro figuras faltantes se activan.
-- No se pudo probar Edge ni fijar 1920 × 1080, 1366 × 768, 1280 × 720 o 390 × 844 desde la interfaz de navegador disponible. La pantalla completa tampoco se ejecutó: `requestFullscreen` no existe en ese Chrome de prueba. Consulta [AUDITORIA_VISUAL_TSP.md](AUDITORIA_VISUAL_TSP.md) para el detalle y los desbordes verticales observados.
+- No se ejecutan fuerza bruta, Held-Karp, recocido simulado ni algoritmo genetico. El control ACO calcula probabilidades de una eleccion didactica, no una colonia completa.
+- Verificaci?n de esta actualizaci?n: `node --check` para ambos m?dulos; parser y motor Node con las dos instancias, redondeo EUC_2D, rutas, diferencias incrementales y entradas malformadas; Chrome local para resultados, mapa, demo 2-opt, retroceso, avance, pausa, reanudaci?n, hash, teclado e ?ndice. Sin errores de consola.
+- En Chrome se verificaron 1920 ? 1080, 1366 ? 768, 1280 ? 720 y 390 ? 844: sin overflow horizontal ni desbordamiento interno de diapositivas. Edge y pantalla completa no se pudieron confirmar. La carga de archivos locales no pudo probarse porque la extensi?n de Chrome bloquea file chooser; el parser s? se prob? directamente. Consulta [AUDITORIA_VISUAL_TSP.md](AUDITORIA_VISUAL_TSP.md).
 - Las figuras originales y la reproducibilidad de los resultados aportados siguen pendientes de recibir los artefactos del experimento.
+
+## Visualizaciones interactivas
+
+La diapositiva de escala calcula exactamente (n-1)!/2 con BigInt y muestra el crecimiento en eje logaritmico. El control ACO calcula probabilidades normalizadas para un escenario numerico didactico; no ejecuta una colonia completa ni representa resultados experimentales. Los datos experimentales y PNG ausentes siguen pendientes de incorporar con procedencia trazable.
+
+La presentaci?n tiene 19 diapositivas, incluida una explicaci?n gr?fica de 2-opt. El protocolo de 30 semillas permanece planificado; no se afirma que haya sido ejecutado.

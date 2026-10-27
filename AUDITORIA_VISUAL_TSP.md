@@ -136,3 +136,16 @@ No hay capturas adjuntas: la navegación del navegador rechazó la apertura loca
 - No hay datos tabulares ni figuras originales que permitan reproducir el experimento de 8 980/7 967, tiempos, calibración, ni la comparación entre metaheurísticas. El valor 8 980 sí coincide con vecino más cercano berlin52 desde ID 1 en el motor actualizado; el 7 967 no coincide: el 2-opt reproducido obtiene 7 842. La cifra 7 967 necesita semilla/ruta, versión de código o explicación de otra convención.
 - No se implementan fuerza bruta, Held–Karp, recocido simulado, algoritmo genético ni ACO; sus diapositivas son explicaciones teóricas, no resultados del paquete.
 - `.git` no permitió crear rama ni restaurar el índice (permiso denegado al crear `.git/index.lock`). Se generó `prechange-tracked-snapshot.zip` desde el commit original `HEAD` para preservar la línea base rastreada; el logo UTEC, que ya era un archivo no rastreado, se dejó intacto.
+
+
+## Actualizacion de demo y trazabilidad (2026-10-27)
+
+- Se agrego una explicacion visual de 2-opt con aristas retiradas, aristas incorporadas, inversion del tramo y la diferencia de cuatro aristas para el caso simetrico.
+- El motor calcula el mejor movimiento con diferencias incrementales y verifica el costo real de la ruta elegida. Rechaza matrices no simetricas para esa evaluacion.
+- La demo registra movimientos aceptados para avanzar, retroceder y reproducir; distingue la duracion de computo del intervalo de animacion.
+- Nueva corrida desde TSPLIB ID 1: berlin52 8 980 -> 7 842 (11 movimientos), gap final 3,98%; eil51 511 -> 435 (9 movimientos), gap final 2,11%. Cada instancia tiene una sola corrida determinista; no se infiere estabilidad estadistica. El 7 967 permanece como dato aportado anteriormente y no reproducido.
+- Se incorporaron factorial exacto interactivo y probabilidades ACO normalizadas en un escenario didactico, claramente etiquetado como no experimental.
+- Verificado en Chrome local: carga de TSPLIB, resultados reproducidos, comparacion de mapas, paso 2-opt, retroceso, reavance, pausa y reanudacion; no se registraron errores de consola. Matriz final: 1920x1080, 1366x768, 1280x720 y 390x844 sin overflow horizontal ni desbordamiento interno de slides.
+
+- En el viewport movil el deck funciona como documento vertical; no se observo overflow horizontal y el titulo de la demo no se solapa con la navegacion tras completar el desplazamiento.
+- La carga desde el selector de archivos no se verifico: la extension Chrome de esta sesion bloquea `fileChooser.setFiles`. El parser del motor si se ejecuto desde Node con entradas malformadas. Pantalla completa y Edge quedan pendientes.
