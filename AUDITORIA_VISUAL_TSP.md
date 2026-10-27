@@ -107,3 +107,32 @@ No hay capturas adjuntas: la navegación del navegador rechazó la apertura loca
 - **Navegación directa:** `app.js` lee el fragmento inicial y ofrece IDs por slide; `history.replaceState` actualiza la URL. No se verificó la página en GitHub Pages.
 - **JavaScript y animaciones:** existe lógica de carga de figuras con fallback, SVG generado y canvas; no se ejecutó JS en navegador, por lo que no se pueden descartar errores de runtime. `prefers-reduced-motion` está en CSS, con la salvedad de la animación JS de portada.
 - **Accesibilidad básica:** hay `lang="es"`, viewport, etiquetas ARIA puntuales, texto alternativo y estilos `:focus-visible`; quedan por mejorar el diálogo del índice, el foco y el patrón móvil.
+
+## G. Actualización de implementación y verificación · 27 de octubre de 2026
+
+### Cambios realizados
+
+- Se integró el PNG institucional sin editarlo. Propiedades locales: 1024 × 607 px, RGBA con transparencia; su arte original es oscuro y se invierte/aclarea solo mediante CSS para mostrarlo sobre el fondo oscuro.
+- El encabezado incluye identidad de curso, contador, índice y fullscreen; se añadieron flechas de navegación en pantalla. El índice implementa semántica de diálogo, ciclo de foco, cierre por Escape y retorno de foco. La navegación por hash y las teclas solicitadas se mantienen. En móvil, `goTo()` desplaza la slide activa a la vista.
+- La demo sintética anterior se sustituyó por coordenadas oficiales de berlin52 y eil51, parser local `.tsp`, matriz simétrica EUC_2D con redondeo `floor(d + 0.5)`, rutas completas verificables, vecino más cercano, 2-opt por delta de cuatro aristas, origen seleccionable, costo, gap, reducción y tiempo de ejecución.
+- El motor quedó separado en `tsp-engine.js`. La demo enseña el historial del costo y marca las dos aristas eliminadas y las dos añadidas en el último movimiento 2-opt.
+- Se sustituyeron afirmaciones sin trazabilidad por esquemas rotulados como conceptuales o por avisos de procedencia pendiente. Los resultados aportados se conservaron claramente separados del cálculo de la demo.
+- Se verificaron metadatos y DOI de las seis referencias clásicas y se añadieron citas en los bloques correspondientes. Se descargaron solo `berlin52.tsp` y `eil51.tsp` desde el archivo oficial de TSPLIB95.
+
+### Verificación efectuada
+
+- `node --check app.js` y `node --check tsp-engine.js`: sin errores de sintaxis.
+- Prueba local del motor en Node 24.13.0: dimensiones (52/51), tipo EUC_2D, simetría y diagonal cero; vecino más cercano y 2-opt. berlin52: 8 980 → 7 842 en 11 movimientos. eil51: 511 → 435 en 9 movimientos. Todas las mejoras aceptadas redujeron estrictamente el costo y los tours validaron una visita por ciudad con cierre al origen.
+- Pruebas del parser: archivo vacío, tipo de peso no admitido, ID repetido y dimensión inconsistente fueron rechazados. Casos de distancia 1,4 y 1,5 confirmaron redondeo TSPLIB (1 y 2); el costo de la ruta de tres puntos confirmó el retorno al origen.
+- Chrome local a 1536 × 770: se recorrieron las 18 diapositivas; no se detectó desbordamiento horizontal. Presentación, logo y recursos del motor cargaron; los cuatro PNG experimentales siguen ausentes y se mostraron sus fallbacks conceptuales. No aparecieron errores ni advertencias en la consola.
+- En Chrome se verificaron flechas en pantalla, selección desde el índice, navegación por `Home`, `End`, flechas, `M` y `Escape`, actualización de hash/contador y recuperación de foco. El encabezado precisó `pointer-events:auto` para que el índice y fullscreen fueran clicables.
+- La UI de la demo confirmó los mismos costos, gap y reducciones: berlin52 8 980 → 7 842, gap 3,98 %, reducción 12,67 %; eil51 511 → 435, gap 2,11 %, reducción 14,87 %.
+- El API de pantalla completa no está disponible en este Chrome de prueba (`requestFullscreen` no existe); la interacción se dejó implementada y su prueba visual queda pendiente en un navegador con esa capacidad.
+
+### Pendientes y límites
+
+- No se probó Edge ni fue posible fijar los viewports de 1920 × 1080, 1366 × 768, 1280 × 720 y 390 × 844 desde la interfaz de navegador disponible. La comprobación de overflow cubre un viewport de 1536 × 770 y se inspeccionaron las reglas CSS de los breakpoints; la matriz completa de resoluciones permanece pendiente.
+- Las diapositivas `datos`, `exactos`, `heuristicas` y `demo` requieren algo de scroll vertical en el viewport comprobado (aprox. +45, +33, +32 y +169 px). La bibliografía se reorganizó en dos columnas y ya cabe en ese viewport. El modo móvil conserva scroll vertical por diseño.
+- No hay datos tabulares ni figuras originales que permitan reproducir el experimento de 8 980/7 967, tiempos, calibración, ni la comparación entre metaheurísticas. El valor 8 980 sí coincide con vecino más cercano berlin52 desde ID 1 en el motor actualizado; el 7 967 no coincide: el 2-opt reproducido obtiene 7 842. La cifra 7 967 necesita semilla/ruta, versión de código o explicación de otra convención.
+- No se implementan fuerza bruta, Held–Karp, recocido simulado, algoritmo genético ni ACO; sus diapositivas son explicaciones teóricas, no resultados del paquete.
+- `.git` no permitió crear rama ni restaurar el índice (permiso denegado al crear `.git/index.lock`). Se generó `prechange-tracked-snapshot.zip` desde el commit original `HEAD` para preservar la línea base rastreada; el logo UTEC, que ya era un archivo no rastreado, se dejó intacto.
