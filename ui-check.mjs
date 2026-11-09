@@ -1,0 +1,6 @@
+﻿import {chromium} from 'playwright';import fs from 'node:fs';
+const b=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});const p=await b.newPage({viewport:{width:1366,height:768},reducedMotion:'reduce'});let errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:8000/',{waitUntil:'networkidle'});fs.mkdirSync('visual-tests',{recursive:true});await p.addStyleTag({content:'.slide.active{animation:none!important;opacity:1!important}'});
+for(let i=0;i<30;i++){await p.waitForTimeout(450);await p.screenshot({path:`visual-tests/${String(i+1).padStart(2,'0')}.png`});if(i<29)await p.locator('#nextSlide').click();}
+for(let id of ['bruta','held','bb','insercion','recocido','genetico','hormigas','feromonas','evolucion']){await p.evaluate(id=>location.hash=id,id);await p.waitForTimeout(100);let s=p.locator('#'+id);await s.getByRole('button',{name:'Calcular',exact:true}).click();await s.getByRole('button',{name:'Paso ▶',exact:true}).click();await s.getByRole('button',{name:'Reiniciar',exact:true}).click();console.log(id,(await s.locator('.learning-status').innerText()).slice(0,90));}
+console.log('errors',errors);await b.close();
+

@@ -1,3 +1,4 @@
+import "./learning.js";
 import { buildDistances, findBestTwoOptMove, nearestNeighbor, parseTsp, routeCost, validateRoute } from "./tsp-engine.js";
 
 "use strict";
@@ -121,15 +122,6 @@ else {
   heroPath.style.strokeDashoffset = String(length);
   heroPath.animate([{ strokeDashoffset:length },{ strokeDashoffset:0 }], { duration:1800, fill:"forwards", easing:"ease-out" });
 }
-const problemPoints = [[90,80],[330,72],[375,245],[210,288],[65,230]];
-const problemEdges = $("#problemEdges"), problemNodes = $("#problemNodes");
-svg("polyline", { points:[0,1,2,3,4,0].map((i) => problemPoints[i].join(",")).join(" "),stroke:"#55e1c6",fill:"none","stroke-width":"4","stroke-linejoin":"round" }, problemEdges);
-problemPoints.forEach(([x,y], i) => {
-  svg("circle", { cx:x,cy:y,r:12,fill:i===0?"#f1bb77":"#e8f7f3" }, problemNodes);
-  const label = svg("text", { x:x+16,y:y-12,fill:"#d7e7ee","font-size":"18" }, problemNodes);
-  label.textContent = i === 0 ? "O" : "ABCDE"[i];
-});
-
 // Optional scientific figures fall back to explicitly labeled concepts.
 document.querySelectorAll("[data-figure]").forEach((figure) => {
   const image = figure.querySelector("img");
@@ -293,51 +285,6 @@ function populateOrigin() {
   const select = $("#originSelect"); select.replaceChildren();
   demo.instance.nodes.forEach((node, index) => { const option = document.createElement("option"); option.value = String(index); option.textContent = String(node.id); select.appendChild(option); });
 }
-function reproduceComparison() {
-  const host = $("#qualityComparison"); host.replaceChildren(); $("#reproducedResults").textContent = "Calculando ambas instancias oficiales desde el ID TSPLIB 1...";
-  Promise.all(["berlin52", "eil51"].map(async (name) => {
-    const response = await fetch(`results/${name}.tsp`); if (!response.ok) throw new Error(`${name}: HTTP ${response.status}`);
-    const instance = parseTsp(await response.text()); const distances = buildDistances(instance), start = instance.nodes.findIndex((node) => node.id === 1);
-    if (start < 0) throw new Error(`${name}: no contiene ciudad TSPLIB ID 1`);
-    const nn = nearestNeighbor(distances, start), nnCost = routeCost(nn, distances); let route = nn, moves = 0;
-    for (;;) { const move = findBestTwoOptMove(route, distances); if (!move) break; route = move.route; moves += 1; }
-    const twoCost = routeCost(route, distances), optimum = { berlin52: 7542, eil51: 426 }[name];
-    validateRoute(route, instance.dimension);
-    return { name, nnCost, twoCost, moves, optimum, nodes: instance.nodes, nnRoute: nn, twoRoute: route, nnGap: 100 * (nnCost - optimum) / optimum, twoGap: 100 * (twoCost - optimum) / optimum };
-  })).then((results) => {
-    $("#reproducedResults").textContent = "Una corrida por instancia; no es un an\u00e1lisis estad\u00edstico.";
-    const mapCanvas = document.createElement("canvas");
-    mapCanvas.className = "quality-map"; mapCanvas.width = 760; mapCanvas.height = 140;
-    mapCanvas.setAttribute("role", "img");
-    mapCanvas.setAttribute("aria-label", "Comparación de las rutas calculadas por vecino más cercano y por 2-opt para berlin52");
-    host.appendChild(mapCanvas);
-    drawComparisonMap(mapCanvas, results.find((result) => result.name === "berlin52"));
-    results.forEach((result) => {
-      const row = document.createElement("article"); row.className = "quality-row";
-      row.innerHTML = `<header><strong>${result.name}</strong><span>${result.moves} movimientos aceptados</span></header><div class="quality-values"><span>Vecino m\u00e1s cercano <b>${formatCost(result.nnCost)}</b><small>gap ${result.nnGap.toFixed(2)} %</small></span><span>Tras 2-opt <b>${formatCost(result.twoCost)}</b><small>gap ${result.twoGap.toFixed(2)} %</small></span><span>\u00d3ptimo TSPLIB95 <b>${formatCost(result.optimum)}</b></span></div>`;
-      host.appendChild(row);
-    });
-  }).catch((error) => { $("#reproducedResults").textContent = `No se pudo reproducir: ${error.message}`; });
-}
-
-function drawComparisonMap(canvas, result) {
-  if (!result) return;
-  const context = canvas.getContext("2d"), { nodes } = result, width = canvas.width, height = canvas.height;
-  context.fillStyle = colors.bg; context.fillRect(0, 0, width, height);
-  const minX = Math.min(...nodes.map((node) => node.x)), maxX = Math.max(...nodes.map((node) => node.x));
-  const minY = Math.min(...nodes.map((node) => node.y)), maxY = Math.max(...nodes.map((node) => node.y));
-  const routes = [result.nnRoute, result.twoRoute], labels = ["Vecino más cercano", "Tras 2-opt"], colorsForRoute = ["#f1bb77", "#55e1c6"];
-  routes.forEach((route, routeIndex) => {
-    const left = routeIndex * width / 2 + 14, panelWidth = width / 2 - 28, pad = 20;
-    const scale = Math.min((panelWidth - pad * 2) / (maxX - minX || 1), (height - 50) / (maxY - minY || 1));
-    const points = nodes.map((node) => ({ x: left + pad + (node.x - minX) * scale, y: 30 + (maxY - node.y) * scale }));
-    context.beginPath(); route.forEach((city, index) => { const point = points[city]; if (!index) context.moveTo(point.x, point.y); else context.lineTo(point.x, point.y); });
-    context.lineTo(points[route[0]].x, points[route[0]].y); context.strokeStyle = colorsForRoute[routeIndex]; context.lineWidth = 1.4; context.stroke();
-    context.fillStyle = colorsForRoute[routeIndex]; context.font = "13px system-ui"; context.fillText(labels[routeIndex], left + 8, 18);
-    context.fillStyle = "#f4f7fb"; points.forEach((point) => { context.beginPath(); context.arc(point.x, point.y, 1.8, 0, Math.PI * 2); context.fill(); });
-  });
-}
-
 function updateFactorial() {
   const n = Number($("#cityCount").value); $("#cityCountValue").value = String(n); $("#cityCountValue").textContent = String(n);
   let factorial = 1n; for (let k = 2n; k <= BigInt(n - 1); k += 1n) factorial *= k;
@@ -356,13 +303,6 @@ function updateFactorial() {
   [0, 10, 20, 30].forEach((exp) => { const yy = 176 - exp * 158 / maxLog; add("line", { x1: 54, x2: 700, y1: yy, y2: yy, stroke: "#294354", "stroke-width": 1 }); const label = add("text", { x: 5, y: yy + 4, fill: "#a8bfca", "font-size": 12 }); label.textContent = `10^${exp}`; });
   const labelX = add("text", { x: 700, y: 205, fill: "#a8bfca", "font-size": 13, "text-anchor": "end" }); labelX.textContent = "n \u00b7 ciudades";
 }
-function updateAco() {
-  const alpha = Number($("#alphaRange").value), beta = Number($("#betaRange").value), tau = [1, .5, .25], distance = [2, 4, 8];
-  $("#alphaValue").value = alpha.toFixed(1); $("#alphaValue").textContent = alpha.toFixed(1); $("#betaValue").value = beta.toFixed(1); $("#betaValue").textContent = beta.toFixed(1);
-  const weights = tau.map((value, i) => value ** alpha * (1 / distance[i]) ** beta), total = weights.reduce((sum, value) => sum + value, 0), host = $("#acoProbabilities"); host.replaceChildren();
-  weights.forEach((weight, i) => { const probability = total ? weight / total : 1 / weights.length, row = document.createElement("div"); row.className = "aco-prob-row"; row.innerHTML = `<span>Arista ${i + 1} \u00b7 d=${distance[i]}</span><i><b style="width:${100 * probability}%"></b></i><strong>${(100 * probability).toFixed(1)}%</strong>`; host.appendChild(row); });
-}
-
 $("#instanceSelect").addEventListener("change", (event) => loadInstance(event.target.value));
 $("#originSelect").addEventListener("change", resetDemo);
 $("#shuffleBtn").addEventListener("click", resetDemo);
@@ -373,10 +313,8 @@ $("#continueBtn").addEventListener("click", startPlayback);
 $("#stepBtn").addEventListener("click", advanceOne);
 $("#backBtn").addEventListener("click", () => { if (!demo.instance) { setStatus("Carga una instancia antes de retroceder movimientos.", true); return; } pausePlayback(false); if (demo.cursor <= 0) { setStatus("La ruta ya esta en el estado inicial."); return; } demo.cursor -= 1; const previous = demo.steps[demo.cursor]; demo.route = [...previous.route]; demo.lastMove = previous.move; demo.durationMs = previous.computeMs; demo.pending = null; updateMetrics(); setStatus(`Retroceso: movimiento ${demo.cursor}; costo ${formatCost(previous.cost)}. El historial posterior se conserva para avanzar de nuevo.`); });
 $("#speedRange").addEventListener("input", (event) => { $("#speedValue").value = `${event.target.value} ms / movimiento`; $("#speedValue").textContent = `${event.target.value} ms / movimiento`; });
-$("#reproduceResults").addEventListener("click", reproduceComparison);
 $("#cityCount").addEventListener("input", updateFactorial);
-$("#alphaRange").addEventListener("input", updateAco); $("#betaRange").addEventListener("input", updateAco);
 $("#tspFile").addEventListener("change", async (event) => { const file = event.target.files?.[0]; if (!file) return; try { const instance = parseTsp(await file.text()); instance.optimal = null; installInstance(instance); $("#instanceSelect").value = ""; setStatus(`Archivo ${file.name} cargado y validado. Optimo de referencia no asignado.`); } catch (error) { setStatus(error.message, true); } });
 
 const initialSlide = slides.findIndex((slide) => slide.id === location.hash.slice(1));
-goTo(initialSlide >= 0 ? initialSlide : 0); updateFactorial(); updateAco(); loadInstance($("#instanceSelect").value); reproduceComparison();
+goTo(initialSlide >= 0 ? initialSlide : 0); updateFactorial(); loadInstance($("#instanceSelect").value);

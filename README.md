@@ -61,3 +61,9 @@ El valor 7 967 y las comparaciones previas entre metaheur?sticas fueron aportado
 La diapositiva de escala calcula exactamente (n-1)!/2 con BigInt y muestra el crecimiento en eje logaritmico. El control ACO calcula probabilidades normalizadas para un escenario numerico didactico; no ejecuta una colonia completa ni representa resultados experimentales. Los datos experimentales y PNG ausentes siguen pendientes de incorporar con procedencia trazable.
 
 La presentaci?n tiene 19 diapositivas, incluida una explicaci?n gr?fica de 2-opt. El protocolo de 30 semillas permanece planificado; no se afirma que haya sido ejecutado.
+
+## Ampliación del laboratorio
+
+La presentación incorpora siete capítulos y demostraciones calculadas con la matriz de la tabla 7 de `Optimización_2026_2.pdf`. El mapa de esa instancia es esquemático: los costos provienen de la matriz, no de las coordenadas. Las ejecuciones de ACO, genético y recocido son simulaciones reproducibles, no registros históricos. ACO usa seis hormigas, 50 iteraciones y Q=100; semilla, α, β y ρ se pueden modificar. Los métodos exactos educativos están limitados a 10 ciudades en fuerza bruta y branch and bound, y 16 en Held–Karp. El laboratorio TSPLIB original sigue disponible.
+
+Ejecutar pruebas: `node test_tsp.mjs`. Se necesita Node compatible con módulos ES. La aplicación sigue siendo estática y conserva rutas relativas; GitHub Pages puede publicar la raíz sin compilación.
