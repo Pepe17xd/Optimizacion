@@ -1,5 +1,5 @@
 ﻿import assert from 'node:assert/strict';
-import {bruteForce,heldKarp,branchBound,cheapestInsertion,anneal,genetic,antColony,nearestNeighbor,routeCost,validateRoute,findBestTwoOptMove,parseTsp,buildDistances} from './tsp-engine.js';
+import {bruteForce,heldKarp,branchBound,cheapestInsertion,anneal,genetic,antColony,nearestNeighbor,routeCost,validateRoute,findBestTwoOptMove,parseTsp,buildDistances} from '../src/js/tsp-engine.js';
 import {readFileSync} from 'node:fs';
 const d=[[0,6.3,8.6,9.4,7.1,3.6],[6.3,0,3.2,6.1,7.1,4.1],[8.6,3.2,0,3.6,6.3,5.4],[9.4,6.1,3.6,0,4.1,5.8],[7.1,7.1,6.3,4.1,0,4.1],[3.6,4.1,5.4,5.8,4.1,0]];
 const independent=r=>r.reduce((s,x,i)=>s+d[x][r[(i+1)%r.length]],0);
@@ -7,10 +7,10 @@ const exact=bruteForce(d);assert.equal(exact.evaluated,60);assert.ok(Math.abs(ex
 for(const fn of [heldKarp,branchBound,cheapestInsertion,anneal,genetic,antColony]){const r=fn(d);assert.ok(validateRoute(r.route,6));assert.ok(Math.abs(independent(r.route)-r.cost)<1e-8);if(fn===heldKarp||fn===branchBound)assert.ok(Math.abs(r.cost-exact.cost)<1e-8);}
 for(const fn of [anneal,genetic,antColony])assert.deepEqual(fn(d,{seed:42}),fn(d,{seed:42}));
 assert.ok(Math.abs(routeCost(nearestNeighbor(d),d)-25.7)<1e-9);let m=findBestTwoOptMove([0,2,4,1,5,3],d);assert.ok(m.afterCost<m.beforeCost);
-for(const name of ['berlin52','eil51']){let instance=parseTsp(readFileSync(`results/${name}.tsp`,'utf8'));let dist=buildDistances(instance);assert.ok(validateRoute(nearestNeighbor(dist),instance.dimension));}
+for(const name of ['berlin52','eil51']){let instance=parseTsp(readFileSync(`public/assets/data/${name}.tsp`,'utf8'));let dist=buildDistances(instance);assert.ok(validateRoute(nearestNeighbor(dist),instance.dimension));}
 console.log('Pruebas correctas: caso del informe, exactos, heurísticas, metaheurísticas, reproducibilidad y TSPLIB.');
 
-import {bruteTrace,heldTrace,branchTrace,insertionTrace,twoOptExchange,orderCrossover} from './tsp-engine.js';
+import {bruteTrace,heldTrace,branchTrace,insertionTrace,twoOptExchange,orderCrossover} from '../src/js/tsp-engine.js';
 const traces=bruteTrace(d);assert.equal(traces.length,60);assert.ok(Math.abs(traces.at(-1).best-24.9)<1e-9);assert.equal(traces.filter(t=>t.improved).length,bruteForce(d).states.length);
 const ht=heldTrace(d);assert.ok(ht.events.some(x=>x.type==='reuse'));assert.ok(Math.abs(ht.cost-24.9)<1e-9);assert.ok(validateRoute(ht.route,6));
 const bt=branchTrace(d);assert.ok(bt.events.some(x=>x.type==='prune'));assert.ok(bt.events.filter(x=>x.type==='prune').every(x=>x.bound>=x.best-1e-9));assert.ok(Math.abs(bt.cost-24.9)<1e-9);

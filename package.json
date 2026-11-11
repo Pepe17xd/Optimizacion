@@ -1,1 +1,1 @@
-﻿{"type":"module","scripts":{"build":"node build.mjs","test":"node test_tsp.mjs"}}
+﻿{"type":"module","scripts":{"build":"node scripts/build.mjs","test":"node tests/test_tsp.mjs","serve":"python -m http.server 8000"}}

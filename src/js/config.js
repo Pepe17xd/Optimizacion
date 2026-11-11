@@ -1,0 +1,1 @@
+﻿export const DEFAULT_DEMO_DURATION = 30000;
